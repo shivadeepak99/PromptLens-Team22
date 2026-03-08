@@ -1,0 +1,55 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# environment
+.env
+venv/
+
+# Jupyter
+.ipynb_checkpoints
+
+# data files
+*.jsonl
+*.json
+*.csv
+*.arrow
+
+# IDE/editor
+.vscode/
+*.swp
+
+# tests
+.coverage
+
+# logs
+logs/
+*.log
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# local files
+*.sqlite3
+
+# ignore build artifacts
+build/
+dist/
+
+# ignore virtual envs
+.env/
+
+# temporary
+*.tmp
+
+# database
+*.db
+
+# ignore compiled extensions
+*.so
+
+# other
+# add here as needed
