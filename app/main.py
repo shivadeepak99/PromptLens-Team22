@@ -1,12 +1,15 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.routes import analytics, insights, health
 from app.services.db_service import db_service
+
+load_dotenv()  # Ensure .env variables are available in the app environment
 
 
 def _now_iso() -> str:

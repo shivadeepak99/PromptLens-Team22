@@ -1,4 +1,6 @@
 import json
+import os
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_core.tools import tool
@@ -6,6 +8,9 @@ from langgraph.prebuilt import create_react_agent
 
 from app.services.db_service import db_service
 from app.services.ml_service import ml_service
+
+# Load environment variables from .env file at repository root
+load_dotenv()
 
 @tool
 def query_olap_tool(query: str) -> str:
@@ -35,9 +40,13 @@ class SafeChatNVIDIA(ChatNVIDIA):
         return super().bind_tools(tools, **kwargs)
 
 def get_agent_executor():
+    api_key = os.getenv("NVIDIA_API_KEY")
+    if not api_key:
+        raise RuntimeError("NVIDIA_API_KEY environment variable is not set")
+
     llm = SafeChatNVIDIA(
         model="meta/llama-3.1-70b-instruct",
-        api_key="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",
+        api_key=api_key,
         temperature=0.6,
         top_p=0.95,
         max_tokens=1024,
