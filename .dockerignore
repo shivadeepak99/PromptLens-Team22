@@ -1,0 +1,19 @@
+# Dockerignore
+.git
+.vscode
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+
+# Ignore raw data to keep container small
+raw/
+results/
+transformed/
+
+# However, ENSURE we keep ML_SERVICE models since they're needed for the recommendation endpoint!
+!ml_service/models/*.pkl
+!ml_service/models/*.json
+
+# Keep environment variables for simplicity in deployment if needed
+# !.env

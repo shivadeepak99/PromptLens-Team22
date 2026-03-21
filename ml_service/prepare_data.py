@@ -33,16 +33,9 @@ print(f"[{datetime.now().strftime('%H:%M:%S')}] Starting data preparation pipeli
 # ============================================================================
 print(f"\n[Step 1] Connecting to PostgreSQL...")
 try:
-    conn = psycopg2.connect(
-        host=db_config['host'],
-        port=db_config['port'],
-        dbname=db_config['dbname'],
-        user=db_config['user'],
-        password=db_config['password'],
-        connect_timeout=db_config['timeout']
-    )
+    conn = psycopg2.connect("postgresql://postgres:supersecret@localhost:5432/promptlens")
     cursor = conn.cursor()
-    print(f"✓ Connected to {db_config['dbname']}")
+    print(f"✓ Connected to promptlens")
 except Exception as e:
     print(f"✗ Connection failed: {e}")
     exit(1)
@@ -54,44 +47,43 @@ print(f"\n[Step 2] Loading data from PostgreSQL (200K+ records)...")
 
 query = """
 SELECT 
-    e.execution_key,
+    e.fact_key as execution_key,
     e.prompt_key,
     e.model_key,
     e.task_key,
-    e.execution_status,
-    e.tokens_used,
-    e.latency_ms,
-    e.attempt_count,
-    CASE WHEN e.execution_status = 'success' THEN 1.0 
-         ELSE 0.0 END as success_rate,
-    
+    CASE WHEN e.success_score >= 0.5 THEN 'success' ELSE 'failure' END as execution_status,
+    e.tokens as tokens_used,
+    e.latency as latency_ms,
+    1 as attempt_count,
+    e.success_score as success_rate,
+
     p.prompt_text,
     p.prompt_length,
-    p.token_estimate,
-    p.prompt_type,
+    p.prompt_length as word_count,
+    p.token_estimate as token_count,
+    p.type as prompt_type,
     p.contains_code,
     p.contains_examples,
     p.contains_constraints,
     p.language,
     p.complexity_score,
     p.instruction_density,
-    
+
     m.model_name,
     m.version as model_version,
     m.provider,
-    
+
     t.task_type,
     t.domain,
     t.difficulty
-FROM 
+FROM
     fact_promptexecution e
 LEFT JOIN dim_prompt p ON e.prompt_key = p.prompt_key
 LEFT JOIN dim_model m ON e.model_key = m.model_key
 LEFT JOIN dim_task t ON e.task_key = t.task_key
-ORDER BY e.execution_key DESC
-LIMIT 1000000;  -- Change to 1000000 for full dataset
+ORDER BY e.fact_key DESC
+LIMIT 100000;
 """
-
 try:
     df = pd.read_sql(query, conn)
     print(f"✓ Loaded {len(df):,} records")
@@ -114,15 +106,28 @@ df = df.drop_duplicates(subset=['execution_key'])
 print(f"✓ Duplicates removed: {len(df):,} records")
 
 # Handle missing values
+df['latency_ms'] = df['latency_ms'].fillna(100.0)  # default if empty
+df['tokens_used'] = df['tokens_used'].fillna(10.0)
+
 missing_before = df.isnull().sum().sum()
-df = df.dropna(subset=['prompt_text', 'model_name', 'task_type'])
-df[feature_config['numerical']] = df[feature_config['numerical']].fillna(df[feature_config['numerical']].median())
+df = df.dropna(subset=['prompt_text'])
+df['model_name'] = df['model_name'].fillna('unknown')
+df['task_type'] = df['task_type'].fillna('unknown')
+
+for col in feature_config['numerical']:
+    if col in df.columns:
+        med = df[col].median()
+        if pd.isna(med): med = 0.0
+        df[col] = df[col].fillna(med)
+
 df[feature_config['categorical']] = df[feature_config['categorical']].fillna('unknown')
 missing_after = df.isnull().sum().sum()
 print(f"✓ Missing values handled: {missing_before} → {missing_after}")
 
 # Remove outliers (extreme latencies, token counts)
-df = df[df['latency_ms'] < df['latency_ms'].quantile(0.99)]
+q99 = df['latency_ms'].quantile(0.99)
+if not pd.isna(q99):
+    df = df[df['latency_ms'] <= q99]
 df = df[df['tokens_used'] > 0]
 print(f"✓ Outliers removed: {len(df):,} records")
 
@@ -198,6 +203,8 @@ X = df[numeric_features].copy()
 y = df[target].copy()
 
 # Remove any remaining NaN
+X = X.fillna(0)
+y = y.fillna(0)
 mask = ~(X.isnull().any(axis=1) | y.isnull())
 X = X[mask]
 y = y[mask]
@@ -240,7 +247,7 @@ print(f"✓ Saved: {DATA_DIR}/prepared_data.parquet")
 
 # Save features and target separately
 X.to_parquet(f"{DATA_DIR}/features.parquet", index=False)
-y.to_parquet(f"{DATA_DIR}/target.parquet", index=False)
+y.to_frame().to_parquet(f"{DATA_DIR}/target.parquet", index=False)
 print(f"✓ Saved: {DATA_DIR}/features.parquet, {DATA_DIR}/target.parquet")
 
 # Save splits

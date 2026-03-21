@@ -371,3 +371,41 @@ def model_performance_timeline(
             "data": timeline,
         },
     }
+
+@router.post('/admin/refresh-views')
+def refresh_views():
+    """WebHook to refresh all MatViews after ETL completes."""
+    try:
+        views = [
+            'mv_model_performance_arena', 
+            'mv_language_performance', 
+            'mv_prompt_feature_impact', 
+            'mv_top_prompt_templates', 
+            'mv_daily_model_success'
+        ]
+        with db_service.get_conn() as conn:
+            with conn.cursor() as cur:
+                for v in views:
+                    cur.execute(f"REFRESH MATERIALIZED VIEW {v};")
+            conn.commit()
+        return {'timestamp': _now_iso(), 'status': 'success', 'data': {'message': 'Materialized views refreshed'}}
+    except Exception as exc:
+        _error_response(500, 'REFRESH_ERROR', str(exc))
+
+@router.get('/clusters')
+def get_prompt_clusters():
+    # Example logic or pull from db if we exported to DB, but KMeans clusters predict via ML Service natively per prompt.
+    return {'status': 'success', 'data': 'Clusters loaded natively in ML service.'}
+@router.post('/admin/refresh-views')
+def refresh_views():
+    try:
+        views = ['mv_model_performance_arena', 'mv_language_performance', 'mv_prompt_feature_impact', 'mv_top_prompt_templates', 'mv_daily_model_success']
+        with db_service.get_conn() as conn:
+            with conn.cursor() as cur:
+                for v in views:
+                    cur.execute(f'REFRESH MATERIALIZED VIEW {v}')
+            conn.commit()
+        return {'status': 'success', 'message': 'All materialized views refreshed perfectly.'}
+    except Exception as e:
+        _error_response(500, 'REFRESH_ERROR', str(e))
+

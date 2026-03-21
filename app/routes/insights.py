@@ -1,20 +1,25 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
+from typing import Dict, Any
+
+from app.services.ml_service import ml_service
+from app.agent.query_agent import run_agent_query
 
 router = APIRouter()
 
-@router.post("/insights/recommend")
-def recommend_prompt():
+class RecommendRequest(BaseModel):
+    prompt_text: str
 
-    return {
-        "baseline_score": 0.41,
-        "recommendations": [
-            {
-                "variant": "Add example input/output",
-                "predicted_score": 0.52
-            },
-            {
-                "variant": "Add constraints",
-                "predicted_score": 0.48
-            }
-        ]
-    }
+class ChatRequest(BaseModel):
+    query: str
+
+@router.post("/insights/recommend")
+def recommend_prompt(req: RecommendRequest) -> Dict[str, Any]:
+    # Integrates ML feature extraction and recommendations from our ML service
+    return ml_service.recommend_improvements(req.prompt_text)
+
+@router.post("/insights/chat")
+def chat_with_agent(req: ChatRequest) -> Dict[str, Any]:
+    """Chat endpoint to query the PromptLens agent for analytical insights."""
+    answer = run_agent_query(req.query)
+    return {"answer": answer}
