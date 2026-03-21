@@ -1,0 +1,65 @@
+# PromptLens ML Configuration
+
+database:
+  host: localhost
+  port: 5432
+  dbname: promptlens
+  user: postgres
+  password: postgres  # Change in production!
+  timeout: 30
+
+ml:
+  # Classification
+  classification:
+    model_type: ensemble  # Random Forest + XGBoost
+    test_size: 0.2
+    random_state: 42
+    rf_params:
+      n_estimators: 100
+      max_depth: 15
+      min_samples_split: 10
+      random_state: 42
+    xgb_params:
+      n_estimators: 100
+      max_depth: 8
+      learning_rate: 0.1
+      random_state: 42
+
+  # Clustering
+  clustering:
+    model_type: kmeans
+    n_clusters: 4
+    pca_components: 10
+    random_state: 42
+  
+  # Association Rules
+  association:
+    min_support: 0.08
+    min_confidence: 0.50
+    min_lift: 2.0
+    top_n_rules: 50
+
+# Feature Engineering
+features:
+  numerical:
+    - prompt_length
+    - token_count
+    - instruction_density
+    - word_count
+  
+  categorical:
+    - language
+    - prompt_type
+    - contains_code
+    - contains_examples
+    - contains_constraints
+  
+  target: success_rate
+
+# Output paths
+paths:
+  data_dir: ml_service/data
+  models_dir: ml_service/models
+  results_dir: results
+  figures_dir: results/figures
+  tables_dir: results/tables
