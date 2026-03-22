@@ -58,8 +58,9 @@ export async function getClusters<T = unknown>(): Promise<T> {
   return apiRequest<T>("/analytics/clusters");
 }
 
-export async function sendChatMessage<T = unknown>(query: string): Promise<T> {
-  return apiRequest<T>("/insights/chat", {
+export async function sendChatMessage<T = unknown>(query: string, debug?: boolean): Promise<T> {
+  const path = debug ? "/insights/chat?debug=1" : "/insights/chat";
+  return apiRequest<T>(path, {
     method: "POST",
     body: JSON.stringify({ query }),
   });
