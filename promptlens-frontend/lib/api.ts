@@ -1,4 +1,4 @@
-const BASE_URL = "/api/proxy";
+const BASE_URL = "https://promptlens-backend.onrender.com";
 
 async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
@@ -40,6 +40,22 @@ export async function getModelPerformance<T = unknown>(): Promise<T> {
 
 export async function getLanguagePerformance<T = unknown>(): Promise<T> {
   return apiRequest<T>("/analytics/language-performance");
+}
+
+export async function getPromptFeatures<T = unknown>(): Promise<T> {
+  return apiRequest<T>("/analytics/prompt-features");
+}
+
+export async function getTopPrompts<T = unknown>(): Promise<T> {
+  return apiRequest<T>("/analytics/top-prompts");
+}
+
+export async function getTimeline<T = unknown>(): Promise<T> {
+  return apiRequest<T>("/analytics/model-performance-timeline");
+}
+
+export async function getClusters<T = unknown>(): Promise<T> {
+  return apiRequest<T>("/analytics/clusters");
 }
 
 export async function sendChatMessage<T = unknown>(query: string): Promise<T> {

@@ -33,7 +33,9 @@ def get_connection():
             "psycopg2 is required to load PromptLens records into PostgreSQL. "
             "Install dependencies from requirements.txt first."
         ) from exc
-    url = os.environ.get("DATABASE_URL", "postgresql://localhost/promptlens")
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL environment variable is not set")
     return psycopg2.connect(url)
 
 

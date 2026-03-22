@@ -9,22 +9,16 @@ type Message = {
 };
 
 const starterPrompts = [
-  "What patterns do you see in failed prompts?",
-  "How can I improve reliability for multilingual prompts?",
-  "Suggest a better prompt for summarizing customer reviews.",
+  "Which programming language has the lowest execution reliability?",
+  "What is the average success rate for gpt-4 in the last 7 days?",
+  "List the best performing models for creative tasks.",
 ];
 
 function parseAssistantMessage(payload: unknown): string {
-  if (typeof payload === "string") {
-    return payload;
-  }
-
-  if (!payload || typeof payload !== "object") {
-    return "I could not understand the server response.";
-  }
+  if (typeof payload === "string") return payload;
+  if (!payload || typeof payload !== "object") return "[ERROR] Unrecognized payload schema.";
 
   const candidate = payload as Record<string, unknown>;
-
   if (typeof candidate.response === "string") return candidate.response;
   if (typeof candidate.answer === "string") return candidate.answer;
   if (typeof candidate.message === "string") return candidate.message;
@@ -37,7 +31,7 @@ export default function ChatBox() {
     {
       role: "assistant",
       content:
-        "Welcome to PromptLens Chat. Ask for diagnostics, rewrites, or strategy recommendations for your prompts.",
+        "[SYSTEM STATUS: ONLINE]\nEstablishing connection to Llama-3 Query Agent...\nConnection secure. Awaiting analytical directives.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -53,9 +47,7 @@ export default function ChatBox() {
   }, [messages, loading]);
 
   const submitQuery = async (query: string) => {
-    if (!query || loading) {
-      return;
-    }
+    if (!query || loading) return;
 
     setError(null);
     setMessages((prev) => [...prev, { role: "user", content: query }]);
@@ -67,8 +59,7 @@ export default function ChatBox() {
       const content = parseAssistantMessage(response);
       setMessages((prev) => [...prev, { role: "assistant", content }]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to send message.";
-      setError(message);
+      setError(err instanceof Error ? err.message : "Inference pipeline timeout.");
     } finally {
       setLoading(false);
     }
@@ -76,72 +67,72 @@ export default function ChatBox() {
 
   const handleSend = async (event: FormEvent) => {
     event.preventDefault();
-
-    const query = input.trim();
-    await submitQuery(query);
-  };
-
-  const sendStarterPrompt = async (prompt: string) => {
-    await submitQuery(prompt);
+    await submitQuery(input.trim());
   };
 
   return (
-    <div className="card-glow grid h-[75vh] grid-rows-[auto_1fr_auto] gap-4 rounded-3xl p-4 sm:p-6">
-      <div className="flex flex-wrap gap-2">
+    <div className="metric-card bg-slate-900 border-slate-700 flex flex-col h-[70vh] rounded-lg shadow-inner">
+      <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-800">
         {starterPrompts.map((prompt) => (
           <button
             key={prompt}
             type="button"
-            onClick={() => sendStarterPrompt(prompt)}
-            className="rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/15"
+            onClick={() => submitQuery(prompt)}
+            className="rounded bg-slate-800 border border-slate-700 px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-400 transition hover:bg-slate-700 hover:text-purple-300"
           >
-            {prompt}
+            {prompt.length > 40 ? prompt.substring(0, 40) + "..." : prompt}
           </button>
         ))}
       </div>
 
       <div
         ref={messageContainerRef}
-        className="space-y-3 overflow-y-auto rounded-2xl border border-slate-800/70 bg-slate-950/55 p-3 pr-2"
+        className="flex-1 overflow-y-auto space-y-4 pr-2 font-mono text-sm leading-relaxed"
       >
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
-            className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-6 shadow ${
+            className={`max-w-[90%] rounded p-4 border ${
               message.role === "user"
-                ? "ml-auto border border-cyan-300/25 bg-cyan-400/15 text-cyan-50"
-                : "mr-auto border border-emerald-300/20 bg-emerald-400/10 text-emerald-50"
+                ? "ml-auto bg-slate-800 border-slate-700 text-slate-200"
+                : "mr-auto bg-slate-950 border-purple-900/50 text-slate-300"
             }`}
           >
-            {message.content}
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-2 font-sans font-bold">
+               {message.role === "user" ? "User.Query" : "Llama-3.Response"}
+            </div>
+            <div className="whitespace-pre-wrap">{message.content}</div>
           </div>
         ))}
 
         {loading && (
-          <div className="mr-auto inline-flex items-center gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/15 px-4 py-3 text-sm text-emerald-100">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-200 border-t-transparent" />
-            PromptLens is thinking...
+          <div className="mr-auto inline-flex items-center gap-3 rounded p-4 bg-slate-950 border border-purple-900/50 text-slate-400 text-sm font-mono">
+            <span className="w-1.5 h-4 bg-purple-500 animate-pulse" />
+            Agent evaluating schema...
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSend} className="space-y-2">
-        <div className="flex items-center gap-2">
+      <form onSubmit={handleSend} className="mt-4 pt-4 border-t border-slate-800">
+        <div className="flex items-center gap-3">
+          <span className="text-purple-500 font-mono font-bold">{">"}</span>
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950/90 px-3 py-2.5 text-slate-100 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/15"
-            placeholder="Ask about model trends, failures, or language behavior..."
+            className="w-full bg-transparent text-slate-200 font-mono text-sm outline-none placeholder:text-slate-600 focus:placeholder:text-slate-700"
+            placeholder="Input natural language prompt..."
+            autoComplete="off"
+            spellCheck="false"
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="rounded-xl bg-linear-to-r from-cyan-300 to-emerald-300 px-4 py-2.5 font-semibold text-slate-900 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            className="px-4 py-2 bg-purple-600 text-white font-bold text-[10px] uppercase tracking-widest rounded transition-colors hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Send
+            Execute
           </button>
         </div>
-        {error && <p className="text-sm text-rose-300">{error}</p>}
+        {error && <p className="text-[11px] text-red-500 font-mono mt-3 uppercase tracking-wider">{error}</p>}
       </form>
     </div>
   );

@@ -33,9 +33,14 @@ print(f"[{datetime.now().strftime('%H:%M:%S')}] Starting data preparation pipeli
 # ============================================================================
 print(f"\n[Step 1] Connecting to PostgreSQL...")
 try:
-    conn = psycopg2.connect("postgresql://postgres:supersecret@localhost:5432/promptlens")
+    from dotenv import load_dotenv
+    load_dotenv()
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        raise RuntimeError("DATABASE_URL environment variable is not set")
+    conn = psycopg2.connect(db_url)
     cursor = conn.cursor()
-    print(f"✓ Connected to promptlens")
+    print(f"✓ Connected to promptlens database")
 except Exception as e:
     print(f"✗ Connection failed: {e}")
     exit(1)

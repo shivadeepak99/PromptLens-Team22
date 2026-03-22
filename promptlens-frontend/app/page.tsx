@@ -1,68 +1,36 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import ChartCard from "@/components/ChartCard";
-import { getLanguagePerformance, getModelPerformance } from "@/lib/api";
+import TimelineChart from "@/components/TimelineChart";
+import { 
+  getModelPerformance, 
+  getLanguagePerformance, 
+  getPromptFeatures,
+  getTopPrompts,
+  getTimeline
+} from "@/lib/api";
 
-type RawItem = Record<string, unknown>;
-
-type ChartPoint = {
-  name: string;
-  value: number;
+type BackendResponse<T> = {
+  status: string;
+  data: {
+    data: T[];
+    total_count?: number;
+    insights?: Record<string, unknown>;
+  };
 };
 
-function toNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  return null;
-}
-
-function itemLabel(item: RawItem, index: number): string {
-  const candidate = item.model ?? item.language ?? item.name ?? item.label;
-  return typeof candidate === "string" ? candidate : `Item ${index + 1}`;
-}
-
-function itemSuccessRate(item: RawItem): number {
-  const value =
-    toNumber(item.success_rate) ??
-    toNumber(item.successRate) ??
-    toNumber(item.score) ??
-    toNumber(item.accuracy);
-  return value ?? 0;
-}
-
-function itemAttempts(item: RawItem): number {
-  const value =
-    toNumber(item.attempts) ??
-    toNumber(item.total_attempts) ??
-    toNumber(item.total) ??
-    toNumber(item.count);
-  return value ?? 0;
-}
-
-function topPerformer(items: RawItem[]): { label: string; score: number } | null {
-  if (items.length === 0) return null;
-
-  const selected = items.reduce((best, current, index) => {
-    const currentScore = itemSuccessRate(current);
-    if (!best || currentScore > best.score) {
-      return { label: itemLabel(current, index), score: currentScore };
-    }
-    return best;
-  }, null as { label: string; score: number } | null);
-
-  return selected;
-}
+type ModelItem = { model_name: string; attempts: number; avg_success: number; success_rate_pct: number; };
+type LanguageItem = { programming_language: string; total_prompts: number; success_rate: number; };
+type FeatureItem = { features: Record<string, boolean>; sample_count: number; avg_success: number; feature_combination_id: string; };
+type TopPromptItem = { prompt_hash: string; prompt_preview: string; usage_count: number; success_rate_pct: number; rank: number; };
 
 export default function DashboardPage() {
-  const [modelData, setModelData] = useState<RawItem[]>([]);
-  const [languageData, setLanguageData] = useState<RawItem[]>([]);
+  const [modelData, setModelData] = useState<ModelItem[]>([]);
+  const [languageData, setLanguageData] = useState<LanguageItem[]>([]);
+  const [featureData, setFeatureData] = useState<FeatureItem[]>([]);
+  const [topPrompts, setTopPrompts] = useState<TopPromptItem[]>([]);
+  const [timelineData, setTimelineData] = useState<any[]>([]); // will parse
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,171 +38,189 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       setLoading(true);
       setError(null);
-
       try {
-        const [models, languages] = await Promise.all([
-          getModelPerformance<RawItem[] | { items?: RawItem[] }>(),
-          getLanguagePerformance<RawItem[] | { items?: RawItem[] }>(),
+        const [modelsRes, langsRes, featsRes, promptsRes, timelineRes] = await Promise.all([
+          getModelPerformance<BackendResponse<ModelItem>>(),
+          getLanguagePerformance<BackendResponse<LanguageItem>>(),
+          getPromptFeatures<BackendResponse<FeatureItem>>(),
+          getTopPrompts<BackendResponse<TopPromptItem>>(),
+          getTimeline<any>()
         ]);
 
-        const modelItems = Array.isArray(models) ? models : (models.items ?? []);
-        const languageItems = Array.isArray(languages) ? languages : (languages.items ?? []);
+        setModelData(modelsRes?.data?.data || []);
+        setLanguageData(langsRes?.data?.data || []);
+        setFeatureData(featsRes?.data?.data || []);
+        setTopPrompts(promptsRes?.data?.data || []);
+        
+        // Parse timeline dictionary to array for recharts
+        if (timelineRes?.data?.data) {
+           const seriesMap = timelineRes.data.data;
+           const rawLineData = [];
+           // we need to flatmap or construct days properly 
+           // actually looking at the backend, it returns dict keys by model
+           const allDays = new Set<string>();
+           Object.keys(seriesMap).forEach(model => {
+              seriesMap[model].forEach((pt: any) => allDays.add(pt.day));
+           });
+           
+           const sortedDays = Array.from(allDays).sort();
+           const chartReadyData = sortedDays.map(day => {
+              const dayPoint: any = { day };
+              Object.keys(seriesMap).forEach(model => {
+                 const match = seriesMap[model].find((pt: any) => pt.day === day);
+                 if (match) {
+                    dayPoint[model] = match.avg_success * 100;
+                 }
+              });
+              return dayPoint;
+           });
+           setTimelineData(chartReadyData);
+        }
 
-        setModelData(modelItems);
-        setLanguageData(languageItems);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load analytics.";
-        setError(message);
+        setError(err instanceof Error ? err.message : "Data warehouse sync failed.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchDashboardData();
   }, []);
 
-  const modelChartData = useMemo<ChartPoint[]>(
-    () => modelData.map((item, index) => ({ name: itemLabel(item, index), value: itemSuccessRate(item) })),
-    [modelData],
-  );
+  const modelChartData = useMemo(() => modelData.map((item) => ({ name: item.model_name, value: item.success_rate_pct })), [modelData]);
+  const languageChartData = useMemo(() => languageData.map((item) => ({ name: item.programming_language, value: parseFloat((item.success_rate * 100).toFixed(2)) })), [languageData]);
+  const totalAttempts = useMemo(() => modelData.reduce((total, item) => total + item.attempts, 0), [modelData]);
 
-  const languageChartData = useMemo<ChartPoint[]>(
-    () => languageData.map((item, index) => ({ name: itemLabel(item, index), value: itemSuccessRate(item) })),
-    [languageData],
-  );
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-900">
+        <div className="text-center text-slate-400">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto"></div>
+          <p className="text-sm font-medium tracking-wide uppercase">Connecting to PostgreSQL Warehouse...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const totalAttempts = useMemo(
-    () => [...modelData, ...languageData].reduce((total, item) => total + itemAttempts(item), 0),
-    [languageData, modelData],
-  );
-
-  const averageSuccessRate = useMemo(() => {
-    const all = [...modelData, ...languageData];
-    if (all.length === 0) return 0;
-
-    const sum = all.reduce((total, item) => total + itemSuccessRate(item), 0);
-    return sum / all.length;
-  }, [languageData, modelData]);
-
-  const topModel = useMemo(() => topPerformer(modelData), [modelData]);
-  const topLanguage = useMemo(() => topPerformer(languageData), [languageData]);
+  if (error) {
+    return (
+      <div className="p-8 mx-auto max-w-[1400px]">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded text-sm font-mono">
+          [CRITICAL EXCEPTION] {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <section className="mx-auto grid-aurora w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-      <header className="card-glow relative rounded-3xl p-6 sm:p-8">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-cyan-300/35 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
-            Analytics Center
-          </span>
-          <span className="rounded-full border border-emerald-300/35 bg-emerald-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-100">
-            Real-time Insights
-          </span>
+    <div className="mx-auto w-full max-w-[1400px] p-4 xl:p-8 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div>
+           <h1 className="text-2xl font-bold text-slate-100 tracking-tight">ETL Executive Summary</h1>
+           <p className="text-sm text-slate-400 mt-1">Materialized view metrics synchronized from production datamart.</p>
         </div>
-
-        <h1 className="headline-gradient mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Build better prompts with clear, visual feedback
-        </h1>
-        <p className="mt-3 max-w-2xl text-slate-300">
-          Monitor quality trends, compare performance, and jump directly into analysis or guided chat.
-        </p>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/analyzer"
-            className="rounded-xl bg-linear-to-r from-emerald-300 to-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:brightness-105"
-          >
-            Analyze Prompt
-          </Link>
-          <Link
-            href="/chat"
-            className="rounded-xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
-          >
-            Open AI Chat
-          </Link>
+        <div className="flex gap-2">
+           <button onClick={() => window.location.reload()} className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 text-xs uppercase tracking-wider font-semibold rounded border border-slate-700 transition">
+             Refresh Views
+           </button>
         </div>
-      </header>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <article className="card-glow rounded-3xl p-4">
-          <p className="text-sm text-slate-400">Average Success</p>
-          <p className="mt-2 text-3xl font-semibold text-emerald-300">{averageSuccessRate.toFixed(2)}%</p>
-          <p className="mt-2 text-xs text-slate-500">All model + language datapoints combined</p>
-        </article>
-        <article className="card-glow rounded-3xl p-4">
-          <p className="text-sm text-slate-400">Total Attempts</p>
-          <p className="mt-2 text-3xl font-semibold text-cyan-300">{totalAttempts}</p>
-          <p className="mt-2 text-xs text-slate-500">Backend-reported execution attempts</p>
-        </article>
-        <article className="card-glow rounded-3xl p-4">
-          <p className="text-sm text-slate-400">Data Points</p>
-          <p className="mt-2 text-3xl font-semibold text-emerald-300">{modelData.length + languageData.length}</p>
-          <p className="mt-2 text-xs text-slate-500">Rows consumed from analytics endpoints</p>
-        </article>
-        <article className="card-glow rounded-3xl p-4">
-          <p className="text-sm text-slate-400">Top Performer</p>
-          <p className="mt-2 line-clamp-1 text-lg font-semibold text-cyan-100">
-            {topModel?.label ?? topLanguage?.label ?? "Not available"}
-          </p>
-          <p className="mt-2 text-xs text-slate-500">
-            Score {(topModel?.score ?? topLanguage?.score ?? 0).toFixed(2)}%
-          </p>
-        </article>
       </div>
 
-      {loading && (
-        <div className="inline-flex items-center gap-2 rounded-lg border border-cyan-300/20 bg-slate-900/70 px-4 py-2 text-slate-200">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" />
-          Loading dashboard data...
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="metric-card">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Global Query Volume</div>
+          <div className="text-3xl font-bold text-slate-100">{totalAttempts.toLocaleString()}</div>
         </div>
-      )}
-
-      {error && <p className="rounded-xl border border-rose-400/20 bg-rose-400/10 p-3 text-rose-200">{error}</p>}
-
-      {!loading && !error && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard
-            title="Model Performance"
-            subtitle="Success rate by model"
-            data={modelChartData}
-            colorClass="#22d3ee"
-            accent="cyan"
-          />
-          <ChartCard
-            title="Language Performance"
-            subtitle="Success rate by language"
-            data={languageChartData}
-            colorClass="#34d399"
-            accent="emerald"
-          />
+        <div className="metric-card">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Tracked Models</div>
+          <div className="text-3xl font-bold text-blue-400">{modelData.length}</div>
         </div>
+        <div className="metric-card">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">System Wide Success Rate</div>
+          <div className="text-3xl font-bold text-emerald-400">
+            {modelData.length ? (modelData.reduce((acc, m) => acc + m.success_rate_pct, 0) / modelData.length).toFixed(1) : 0}%
+          </div>
+        </div>
+        <div className="metric-card">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Feature Ablation Tests</div>
+          <div className="text-3xl font-bold text-purple-400">{featureData.length} Combos</div>
+        </div>
+      </div>
+
+      {timelineData.length > 0 && (
+         <div className="metric-card w-full h-[320px]">
+            <h2 className="text-sm font-semibold text-slate-300 mb-4 uppercase tracking-widest">30-Day Sub-model Success Tolerance</h2>
+            <TimelineChart data={timelineData} />
+         </div>
       )}
 
-      {!loading && !error && (
-        <section className="grid gap-4 lg:grid-cols-2">
-          <article className="card-glow rounded-3xl p-5">
-            <p className="text-sm uppercase tracking-[0.18em] text-emerald-200">Best Model</p>
-            {topModel ? (
-              <>
-                <h2 className="mt-3 text-2xl font-semibold text-emerald-100">{topModel.label}</h2>
-                <p className="mt-1 text-slate-300">Success score: {topModel.score.toFixed(2)}%</p>
-              </>
-            ) : (
-              <p className="mt-3 text-slate-400">Model ranking will appear once data arrives.</p>
-            )}
-          </article>
-          <article className="card-glow rounded-3xl p-5">
-            <p className="text-sm uppercase tracking-[0.18em] text-cyan-200">Best Language</p>
-            {topLanguage ? (
-              <>
-                <h2 className="mt-3 text-2xl font-semibold text-cyan-100">{topLanguage.label}</h2>
-                <p className="mt-1 text-slate-300">Success score: {topLanguage.score.toFixed(2)}%</p>
-              </>
-            ) : (
-              <p className="mt-3 text-slate-400">Language ranking will appear once data arrives.</p>
-            )}
-          </article>
-        </section>
-      )}
-    </section>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="Inference Viability by Model" subtitle="Aggregated execution success mapped via datamart" data={modelChartData} colorClass="#3b82f6" />
+        <ChartCard title="Language Compilation Success" subtitle="Syntactical success rate sorted alphabetically" data={languageChartData} colorClass="#10b981" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 data-table-container">
+           <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-widest">Highest Yielding Templates</h3>
+              <span className="text-xs text-slate-400">Top {topPrompts.length} ranked by output determinism</span>
+           </div>
+           <div className="overflow-x-auto">
+             <table className="data-table">
+               <thead>
+                 <tr>
+                   <th className="w-16">Rank</th>
+                   <th>Template Snippet</th>
+                   <th className="w-24 text-right">Uses</th>
+                   <th className="w-24 text-right">Yield</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {topPrompts.map((p, i) => (
+                   <tr key={p.prompt_hash}>
+                     <td className="text-slate-500 font-mono text-xs">#{i + 1}</td>
+                     <td className="max-w-[300px] truncate text-slate-300 text-xs italic">
+                       "{p.prompt_preview}"
+                     </td>
+                     <td className="text-right text-slate-400 font-mono text-xs">{p.usage_count.toLocaleString()}</td>
+                     <td className="text-right font-semibold text-emerald-400 text-xs">{Math.round(p.success_rate_pct)}%</td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           </div>
+        </div>
+
+        <div className="data-table-container">
+           <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
+              <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-widest">Ablation Heat Matrix</h3>
+           </div>
+           <div className="p-4 space-y-3">
+             {featureData.slice(0, 6).map((f) => {
+                const active = Object.values(f.features).filter(Boolean).length;
+                return (
+                  <div key={f.feature_combination_id} className="flex justify-between items-center pb-3 border-b border-slate-800 last:border-0 last:pb-0">
+                     <div className="flex gap-1">
+                        <span className={`w-3 h-3 rounded-sm ${f.features.contains_examples ? 'bg-emerald-500' : 'bg-slate-700'}`} title="Examples" />
+                        <span className={`w-3 h-3 rounded-sm ${f.features.contains_code ? 'bg-blue-500' : 'bg-slate-700'}`} title="Code Blocks" />
+                        <span className={`w-3 h-3 rounded-sm ${f.features.contains_constraints ? 'bg-purple-500' : 'bg-slate-700'}`} title="Constraints" />
+                        <span className="text-[10px] text-slate-500 ml-2 font-mono uppercase">
+                          {active === 0 ? "BASELINE" : `${active} FEAT`}
+                        </span>
+                     </div>
+                     <span className="text-xs font-semibold text-slate-300">
+                        {Math.round(f.avg_success * 100)}%
+                     </span>
+                  </div>
+                );
+             })}
+             <div className="mt-4 pt-1 flex gap-4 justify-center">
+               <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-500 rounded-sm"></span><span className="text-[10px] text-slate-500 uppercase">Ex</span></div>
+               <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-blue-500 rounded-sm"></span><span className="text-[10px] text-slate-500 uppercase">Code</span></div>
+               <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-purple-500 rounded-sm"></span><span className="text-[10px] text-slate-500 uppercase">Constraint</span></div>
+             </div>
+           </div>
+        </div>
+      </div>
+    </div>
   );
 }

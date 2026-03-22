@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 # Configuration
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 MODELS_DIR = "ml_service/models"
 DATA_DIR = "ml_service/data"
 RESULTS_DIR = "results"
@@ -36,7 +36,7 @@ def api_running():
             if i < max_retries - 1:
                 time.sleep(1)
             else:
-                pytest.skip("API not running on localhost:8000. Start with: python ml_service/temporary_test_api.py")
+                pytest.skip(f"API not running on {API_BASE_URL}. Start with: python ml_service/temporary_test_api.py")
 
 # ============================================================================
 # Test: Data Preparation

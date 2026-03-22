@@ -17,56 +17,55 @@ export default function PromptForm({ onAnalyze, loading }: PromptFormProps) {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!promptText.trim()) {
-      return;
-    }
-
+    if (!promptText.trim()) return;
     await onAnalyze(promptText.trim());
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card-glow space-y-4 rounded-3xl p-5 sm:p-7">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <label htmlFor="prompt-input" className="block text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">
-          Prompt Playground
+    <form onSubmit={handleSubmit} className="metric-card space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-3">
+        <label htmlFor="prompt-input" className="block text-xs font-bold uppercase tracking-widest text-slate-300">
+          Inference Input Console
         </label>
-        <span className="rounded-full border border-slate-700/70 px-2.5 py-1 text-xs text-slate-400">
-          {promptText.trim().length} characters
+        <span className="rounded bg-slate-900 border border-slate-700 px-2 py-0.5 text-[10px] font-mono text-slate-400">
+          BYTES: {promptText.trim().length}
         </span>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {templates.map((template) => (
+        {templates.map((template, idx) => (
           <button
-            key={template}
+            key={idx}
             type="button"
             onClick={() => setPromptText(template)}
-            className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1.5 text-xs text-emerald-100 transition hover:border-emerald-300/35 hover:bg-emerald-400/15"
+            className="rounded bg-slate-800 border border-slate-700 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-400 transition hover:text-blue-400 hover:border-blue-500/50"
           >
-            Use Example
+            Load Case {idx + 1}
           </button>
         ))}
       </div>
 
       <textarea
         id="prompt-input"
-        className="min-h-44 w-full rounded-2xl border border-slate-700/85 bg-slate-950/85 p-4 text-sm leading-7 text-slate-100 outline-none transition focus:border-emerald-300 focus:ring-4 focus:ring-emerald-400/15"
+        className="min-h-32 w-full rounded border border-slate-700 bg-slate-900 p-4 text-sm font-mono leading-relaxed text-slate-200 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         value={promptText}
         onChange={(event) => setPromptText(event.target.value)}
-        placeholder="Example: Analyze customer feedback and produce top 3 trends with confidence levels."
+        placeholder="> Enter raw prompt string for model execution..."
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-slate-400">Tip: include context, constraints, and output format for better scores.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <p className="text-[11px] uppercase tracking-widest text-slate-500">
+          System expects UTF-8 string encoding.
+        </p>
         <button
           type="submit"
           disabled={loading || !promptText.trim()}
-          className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-emerald-300 to-cyan-300 px-5 py-2.5 font-semibold text-slate-900 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded bg-blue-600 px-6 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading && (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
           )}
-          Analyze Prompt
+          {loading ? "Executing..." : "Run Extraction"}
         </button>
       </div>
     </form>
