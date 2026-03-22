@@ -22,10 +22,10 @@ class DatabaseService:
 		# Ensure .env variables are loaded before reading DATABASE_* settings.
 		load_dotenv()
 
-		database_url = os.getenv(
-			"DATABASE_URL",
-			"postgresql://postgres:supersecret@localhost:5432/promptlens",
-		)
+		database_url = os.getenv("DATABASE_URL")
+		if not database_url:
+			raise RuntimeError("DATABASE_URL environment variable is not set")
+			
 		min_conn = int(os.getenv("DATABASE_MIN_CONN", "1"))
 		max_conn = int(os.getenv("DATABASE_MAX_CONN", "20"))
 

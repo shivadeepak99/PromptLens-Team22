@@ -1,0 +1,618 @@
+[
+  {
+    "antecedents": [
+      "long_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "success_low"
+    ],
+    "support": 0.0773,
+    "confidence": 0.5634,
+    "lift": 2.0081
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "long_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "success_low"
+    ],
+    "support": 0.0773,
+    "confidence": 0.5634,
+    "lift": 2.0081
+  },
+  {
+    "antecedents": [
+      "long_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density",
+      "success_low"
+    ],
+    "support": 0.0773,
+    "confidence": 0.5634,
+    "lift": 2.0081
+  },
+  {
+    "antecedents": [
+      "medium_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "success_low"
+    ],
+    "support": 0.1252,
+    "confidence": 0.5623,
+    "lift": 2.0041
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "medium_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "success_low"
+    ],
+    "support": 0.1252,
+    "confidence": 0.5623,
+    "lift": 2.0041
+  },
+  {
+    "antecedents": [
+      "medium_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density",
+      "success_low"
+    ],
+    "support": 0.1252,
+    "confidence": 0.5623,
+    "lift": 2.0041
+  },
+  {
+    "antecedents": [
+      "medium_prompt"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.2226,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "long_prompt"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.1372,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "medium_prompt"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.2226,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "medium_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density"
+    ],
+    "support": 0.2226,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "medium_prompt",
+      "success_high"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0752,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "medium_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.1252,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "long_prompt"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.1372,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "long_prompt"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density"
+    ],
+    "support": 0.1372,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "long_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0773,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "medium_prompt",
+      "success_high"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0752,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "medium_prompt",
+      "success_high"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density"
+    ],
+    "support": 0.0752,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "medium_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.1252,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "medium_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density"
+    ],
+    "support": 0.1252,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "long_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0773,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "long_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density"
+    ],
+    "support": 0.0773,
+    "confidence": 1.0,
+    "lift": 1.9932
+  },
+  {
+    "antecedents": [
+      "contains_constraints",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0521,
+    "confidence": 0.9067,
+    "lift": 1.8073
+  },
+  {
+    "antecedents": [
+      "contains_constraints",
+      "high_density",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0521,
+    "confidence": 0.9067,
+    "lift": 1.8073
+  },
+  {
+    "antecedents": [
+      "contains_constraints",
+      "success_low"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density"
+    ],
+    "support": 0.0521,
+    "confidence": 0.9067,
+    "lift": 1.8073
+  },
+  {
+    "antecedents": [
+      "contains_constraints"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0946,
+    "confidence": 0.8966,
+    "lift": 1.7871
+  },
+  {
+    "antecedents": [
+      "contains_constraints",
+      "high_density"
+    ],
+    "consequents": [
+      "high_complexity"
+    ],
+    "support": 0.0946,
+    "confidence": 0.8966,
+    "lift": 1.7871
+  },
+  {
+    "antecedents": [
+      "contains_constraints"
+    ],
+    "consequents": [
+      "high_complexity",
+      "high_density"
+    ],
+    "support": 0.0946,
+    "confidence": 0.8966,
+    "lift": 1.7871
+  },
+  {
+    "antecedents": [
+      "short_prompt",
+      "success_high"
+    ],
+    "consequents": [
+      "low_complexity"
+    ],
+    "support": 0.1803,
+    "confidence": 0.7848,
+    "lift": 1.575
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "short_prompt",
+      "success_high"
+    ],
+    "consequents": [
+      "low_complexity"
+    ],
+    "support": 0.1803,
+    "confidence": 0.7848,
+    "lift": 1.575
+  },
+  {
+    "antecedents": [
+      "short_prompt",
+      "success_high"
+    ],
+    "consequents": [
+      "high_density",
+      "low_complexity"
+    ],
+    "support": 0.1803,
+    "confidence": 0.7848,
+    "lift": 1.575
+  },
+  {
+    "antecedents": [
+      "low_complexity"
+    ],
+    "consequents": [
+      "short_prompt"
+    ],
+    "support": 0.4983,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "low_complexity"
+    ],
+    "consequents": [
+      "short_prompt"
+    ],
+    "support": 0.4983,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "low_complexity"
+    ],
+    "consequents": [
+      "high_density",
+      "short_prompt"
+    ],
+    "support": 0.4983,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "low_complexity",
+      "success_high"
+    ],
+    "consequents": [
+      "short_prompt"
+    ],
+    "support": 0.1803,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "low_complexity",
+      "success_low"
+    ],
+    "consequents": [
+      "short_prompt"
+    ],
+    "support": 0.2622,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "low_complexity",
+      "success_high"
+    ],
+    "consequents": [
+      "short_prompt"
+    ],
+    "support": 0.1803,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "low_complexity",
+      "success_high"
+    ],
+    "consequents": [
+      "high_density",
+      "short_prompt"
+    ],
+    "support": 0.1803,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "low_complexity",
+      "success_low"
+    ],
+    "consequents": [
+      "short_prompt"
+    ],
+    "support": 0.2622,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "low_complexity",
+      "success_low"
+    ],
+    "consequents": [
+      "high_density",
+      "short_prompt"
+    ],
+    "support": 0.2622,
+    "confidence": 1.0,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "short_prompt"
+    ],
+    "consequents": [
+      "low_complexity"
+    ],
+    "support": 0.4983,
+    "confidence": 0.7784,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "short_prompt"
+    ],
+    "consequents": [
+      "low_complexity"
+    ],
+    "support": 0.4983,
+    "confidence": 0.7784,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "short_prompt"
+    ],
+    "consequents": [
+      "high_density",
+      "low_complexity"
+    ],
+    "support": 0.4983,
+    "confidence": 0.7784,
+    "lift": 1.5621
+  },
+  {
+    "antecedents": [
+      "low_complexity"
+    ],
+    "consequents": [
+      "short_prompt",
+      "success_low"
+    ],
+    "support": 0.2622,
+    "confidence": 0.5261,
+    "lift": 1.5462
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "low_complexity"
+    ],
+    "consequents": [
+      "short_prompt",
+      "success_low"
+    ],
+    "support": 0.2622,
+    "confidence": 0.5261,
+    "lift": 1.5462
+  },
+  {
+    "antecedents": [
+      "low_complexity"
+    ],
+    "consequents": [
+      "high_density",
+      "short_prompt",
+      "success_low"
+    ],
+    "support": 0.2622,
+    "confidence": 0.5261,
+    "lift": 1.5462
+  },
+  {
+    "antecedents": [
+      "short_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "low_complexity"
+    ],
+    "support": 0.2622,
+    "confidence": 0.7705,
+    "lift": 1.5462
+  },
+  {
+    "antecedents": [
+      "high_density",
+      "short_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "low_complexity"
+    ],
+    "support": 0.2622,
+    "confidence": 0.7705,
+    "lift": 1.5462
+  },
+  {
+    "antecedents": [
+      "short_prompt",
+      "success_low"
+    ],
+    "consequents": [
+      "high_density",
+      "low_complexity"
+    ],
+    "support": 0.2622,
+    "confidence": 0.7705,
+    "lift": 1.5462
+  },
+  {
+    "antecedents": [
+      "long_prompt"
+    ],
+    "consequents": [
+      "success_low"
+    ],
+    "support": 0.0773,
+    "confidence": 0.5634,
+    "lift": 1.0381
+  },
+  {
+    "antecedents": [
+      "high_complexity",
+      "long_prompt"
+    ],
+    "consequents": [
+      "success_low"
+    ],
+    "support": 0.0773,
+    "confidence": 0.5634,
+    "lift": 1.0381
+  }
+]

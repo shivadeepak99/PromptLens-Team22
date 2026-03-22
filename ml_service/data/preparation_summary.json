@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-03-21T15:48:22.653793",
+  "total_records": 100000,
+  "total_features": 24,
+  "feature_names": [
+    "prompt_length",
+    "instruction_density",
+    "complexity_score",
+    "tokens_used",
+    "latency_ms",
+    "attempt_count",
+    "prompt_word_count",
+    "avg_word_length",
+    "question_marks",
+    "code_blocks",
+    "list_items",
+    "capital_ratio",
+    "contains_code",
+    "contains_examples",
+    "contains_constraints",
+    "language_unknown",
+    "prompt_type_roleplay",
+    "prompt_type_standard",
+    "contains_code_False",
+    "contains_code_True",
+    "contains_examples_False",
+    "contains_examples_True",
+    "contains_constraints_False",
+    "contains_constraints_True"
+  ],
+  "target_stats": {
+    "mean": 0.0,
+    "std": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "median": 0.0
+  },
+  "data_splits": {
+    "train": 70000,
+    "val": 15000,
+    "test": 15000
+  },
+  "missing_values": 600000,
+  "memory_mb": 141.31775951385498
+}

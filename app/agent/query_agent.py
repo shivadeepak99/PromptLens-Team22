@@ -1,5 +1,7 @@
 import json
 import os
+import time
+from contextvars import ContextVar
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
@@ -12,24 +14,107 @@ from app.services.ml_service import ml_service
 # Load environment variables from .env file at repository root
 load_dotenv()
 
+_agent_trace: ContextVar[list[dict] | None] = ContextVar("agent_trace", default=None)
+
+
+def _get_trace_buffer() -> list[dict] | None:
+    return _agent_trace.get()
+
+
+def _reset_trace_buffer() -> None:
+    _agent_trace.set([])
+
+
+def _append_trace(event: dict) -> None:
+    buf = _get_trace_buffer()
+    if buf is None:
+        return
+    buf.append(event)
+
+
+def get_latest_trace() -> list[dict]:
+    """Returns the current request trace buffer (empty if not enabled)."""
+    return list(_get_trace_buffer() or [])
+
 @tool
 def query_olap_tool(query: str) -> str:
     """Executes a SELECT query on PostgreSQL OLAP views to analyze prompt metrics. Returns JSON results."""
+    started = time.perf_counter()
     try:
         if not query.strip().upper().startswith("SELECT"):
-            return "Error: Only SELECT queries are allowed."
+            message = "Error: Only SELECT queries are allowed."
+            _append_trace(
+                {
+                    "type": "tool",
+                    "tool": "query_olap_tool",
+                    "input": {"query": query},
+                    "ok": False,
+                    "error": message,
+                    "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+                }
+            )
+            return message
         
         results = db_service.fetch_all(query)
         # return a stringified dump; bounded to 50 rows 
-        return json.dumps(results[:50], default=str)
+        payload = json.dumps(results[:50], default=str)
+        _append_trace(
+            {
+                "type": "tool",
+                "tool": "query_olap_tool",
+                "input": {"query": query},
+                "ok": True,
+                "row_count": len(results),
+                "sample": results[:5],
+                "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+            }
+        )
+        return payload
     except Exception as e:
-        return f"Database query error: {str(e)}"
+        message = f"Database query error: {str(e)}"
+        _append_trace(
+            {
+                "type": "tool",
+                "tool": "query_olap_tool",
+                "input": {"query": query},
+                "ok": False,
+                "error": message,
+                "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+            }
+        )
+        return message
 
 @tool
 def get_prompt_recommendations(prompt_text: str) -> str:
     """Get ML-based recommendations for how to improve a prompt's performance based on historical data rules."""
-    res = ml_service.recommend_improvements(prompt_text)
-    return json.dumps(res)
+    started = time.perf_counter()
+    try:
+        res = ml_service.recommend_improvements(prompt_text)
+        payload = json.dumps(res)
+        _append_trace(
+            {
+                "type": "tool",
+                "tool": "get_prompt_recommendations",
+                "input": {"prompt_text_preview": (prompt_text or "")[:200]},
+                "ok": True,
+                "sample": res,
+                "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+            }
+        )
+        return payload
+    except Exception as e:
+        message = f"Recommendation tool error: {str(e)}"
+        _append_trace(
+            {
+                "type": "tool",
+                "tool": "get_prompt_recommendations",
+                "input": {"prompt_text_preview": (prompt_text or "")[:200]},
+                "ok": False,
+                "error": message,
+                "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+            }
+        )
+        return message
 
 class ChatRequest(BaseModel):
     query: str
@@ -65,6 +150,7 @@ except Exception as e:
     agent_executor = None
 
 def run_agent_query(user_query: str) -> str:
+    """Runs the agent and returns only the final natural-language answer."""
     if not agent_executor:
         return "Agent is disconnected (check API keys)."
     try:
@@ -99,3 +185,15 @@ Always cite the data from the database or the ML service organically in your fin
         return response["messages"][-1].content
     except Exception as e:
         return f"Agent Error: {str(e)}"
+
+
+def run_agent_query_with_trace(user_query: str) -> tuple[str, list[dict]]:
+    """Runs the agent and returns (answer, trace).
+
+    Trace includes tool calls and tool outputs (sampled), but does not expose
+    internal chain-of-thought.
+    """
+    _reset_trace_buffer()
+    answer = run_agent_query(user_query)
+    trace = get_latest_trace()
+    return answer, trace

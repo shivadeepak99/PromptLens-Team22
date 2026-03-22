@@ -409,3 +409,27 @@ def refresh_views():
     except Exception as e:
         _error_response(500, 'REFRESH_ERROR', str(e))
 
+
+@router.get('/model-efficiency')
+def get_model_efficiency():
+    try:
+        query = """
+        SELECT m.model_name,
+               AVG(f.latency) AS avg_latency,
+               AVG(f.tokens + COALESCE(f.response_tokens, 0)) AS avg_tokens,
+               AVG(f.success_score) AS avg_success_score,
+               COUNT(f.fact_key) AS execution_count
+        FROM fact_promptexecution f
+        JOIN dim_model m ON f.model_key = m.model_key
+        WHERE f.latency IS NOT NULL
+        GROUP BY m.model_name
+        ORDER BY avg_latency ASC;
+        """
+        with db_service.get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                metrics = [dict(r) for r in cur.fetchall()]
+        
+        return {'status': 'success', 'data': metrics}
+    except Exception as e:
+        _error_response(500, 'EFFICIENCY_FETCH_ERROR', str(e))

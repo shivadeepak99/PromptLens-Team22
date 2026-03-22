@@ -1,0 +1,81 @@
+{
+  "timestamp": "2026-03-21T15:48:43.667048",
+  "model_type": "classification_ensemble",
+  "target": "success_rate",
+  "data": {
+    "train_samples": 70000,
+    "val_samples": 15000,
+    "test_samples": 15000,
+    "features": 24
+  },
+  "random_forest": {
+    "params": {
+      "n_estimators": 100,
+      "max_depth": 15,
+      "min_samples_split": 10,
+      "random_state": 42
+    },
+    "validation": {
+      "mae": 0.0,
+      "rmse": 0.0,
+      "r2": 1.0
+    },
+    "test": {
+      "mae": 0.0,
+      "rmse": 0.0,
+      "r2": 1.0
+    }
+  },
+  "xgboost": {
+    "params": {
+      "n_estimators": 100,
+      "max_depth": 8,
+      "learning_rate": 0.1,
+      "random_state": 42
+    },
+    "validation": {
+      "mae": 0.0,
+      "rmse": 0.0,
+      "r2": 1.0
+    },
+    "test": {
+      "mae": 0.0,
+      "rmse": 0.0,
+      "r2": 1.0
+    }
+  },
+  "ensemble": {
+    "strategy": "60% RF + 40% XGB",
+    "test": {
+      "mae": 0.0,
+      "rmse": 0.0,
+      "r2": 1.0
+    }
+  },
+  "feature_columns": [
+    "prompt_length",
+    "instruction_density",
+    "complexity_score",
+    "tokens_used",
+    "latency_ms",
+    "attempt_count",
+    "prompt_word_count",
+    "avg_word_length",
+    "question_marks",
+    "code_blocks",
+    "list_items",
+    "capital_ratio",
+    "contains_code",
+    "contains_examples",
+    "contains_constraints",
+    "language_unknown",
+    "prompt_type_roleplay",
+    "prompt_type_standard",
+    "contains_code_False",
+    "contains_code_True",
+    "contains_examples_False",
+    "contains_examples_True",
+    "contains_constraints_False",
+    "contains_constraints_True"
+  ]
+}

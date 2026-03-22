@@ -22,10 +22,10 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 SCHEMA_FILE = ROOT_DIR / "warehouse" / "schema.sql"
 DEFAULT_PROMPT_INPUT = ROOT_DIR / "transformed" / "prompt_events.jsonl"
 DEFAULT_COMPARISON_INPUT = ROOT_DIR / "transformed" / "model_comparisons.jsonl"
-DB_URL = os.getenv("DATABASE_URL") or os.getenv(
-    "DB_URL",
-    "postgresql://postgres:supersecret@localhost:5432/promptlens",
-)
+DB_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
+    
 COPY_CHUNK_SIZE = int(os.getenv("COPY_CHUNK_SIZE", "50000"))
 PROGRESS_INTERVAL_SECONDS = float(os.getenv("LOAD_PROGRESS_INTERVAL", "5"))
 
