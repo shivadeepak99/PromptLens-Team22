@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
-const BACKEND_BASE_URL = process.env.BACKEND_API_BASE_URL ?? "http://localhost:8000";
+const BACKEND_BASE_URL =
+  process.env.BACKEND_API_BASE_URL ?? "https://promptlens-backend.onrender.com";
 
 async function proxyRequest(
   request: NextRequest,
