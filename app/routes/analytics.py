@@ -414,22 +414,21 @@ def refresh_views():
 def get_model_efficiency():
     try:
         query = """
-        SELECT m.model_name,
-               AVG(f.latency) AS avg_latency,
-               AVG(f.tokens + COALESCE(f.response_tokens, 0)) AS avg_tokens,
-               AVG(f.success_score) AS avg_success_score,
-               COUNT(f.fact_key) AS execution_count
+        SELECT
+            m.model_name,
+            AVG(f.latency) AS avg_latency,
+            AVG(f.tokens + COALESCE(f.response_tokens, 0)) AS avg_tokens,
+            AVG(f.success_score) AS avg_success_score,
+            COUNT(*) AS execution_count,
+            COUNT(f.latency) AS latency_samples,
+            COUNT(f.success_score) AS success_samples
         FROM fact_promptexecution f
         JOIN dim_model m ON f.model_key = m.model_key
-        WHERE f.latency IS NOT NULL
         GROUP BY m.model_name
-        ORDER BY avg_latency ASC;
+        ORDER BY AVG(f.success_score) DESC NULLS LAST, AVG(f.latency) ASC NULLS LAST;
         """
-        with db_service.get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute(query)
-                metrics = [dict(r) for r in cur.fetchall()]
-        
+
+        metrics = db_service.fetch_all(query)
         return {'status': 'success', 'data': metrics}
     except Exception as e:
         _error_response(500, 'EFFICIENCY_FETCH_ERROR', str(e))
