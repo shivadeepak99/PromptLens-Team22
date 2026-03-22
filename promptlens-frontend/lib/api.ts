@@ -71,3 +71,7 @@ export async function analyzePrompt<T = unknown>(prompt_text: string): Promise<T
     body: JSON.stringify({ prompt_text }),
   });
 }
+
+export async function getModelEfficiency<T = unknown>(): Promise<T> {
+  return apiRequest<T>("/analytics/model-efficiency");
+}
