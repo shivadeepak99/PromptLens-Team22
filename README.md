@@ -116,7 +116,7 @@ The project has successfully bridged the gap isolating massive unstructured dial
 
 ## Contribution
 * **BALAGA LOKESH (2023BCS0141) |** Data Mining / ML Engineer: Classification model, clustering analysis, association rule mining, exporting model results.
-* **BARUKULA BRIJESH BENAAYAAH (2022BCS0153) |** OLAP & Dashboard Developer: Analytical SQL queries, materialized views, dashboard visualizations, frontend integration.
+* **BARUKULA BRIJESH BENAAYAAH (2022BCS0153) |** Documentation & Dashboard Developer: Analytical SQL queries, materialized views, dashboard visualizations, frontend integration.
 * **SHANIGARAM SHIVA DEEPAK (2023BCD0048) |** ETL Pipeline Engineer, Database Designer & AI Agent Developer: Dataset ingestion, transformation pipeline, feature extraction, star schema design, PostgreSQL database setup, loader implementation, warehouse validation.
 * **BHUPALAM YASWANTH SAI (2023BCD0057) |** FastAPI Backend Architect: API development, analytics endpoints, integration with database, API security and validation.
 
