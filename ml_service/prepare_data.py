@@ -86,6 +86,7 @@ FROM
 LEFT JOIN dim_prompt p ON e.prompt_key = p.prompt_key
 LEFT JOIN dim_model m ON e.model_key = m.model_key
 LEFT JOIN dim_task t ON e.task_key = t.task_key
+WHERE e.success_score IS NOT NULL
 ORDER BY e.fact_key DESC
 LIMIT 100000;
 """

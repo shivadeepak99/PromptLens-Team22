@@ -14,6 +14,94 @@ type BackendAnalysisResponse = {
   }>;
 };
 
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  if (value < 0) return 0;
+  if (value > 1) return 1;
+  return value;
+}
+
+function heuristicScore(features: Record<string, unknown>): number {
+  const promptLength = Number(features.prompt_length ?? 0);
+  const complexityScore = Number(features.complexity_score ?? 0);
+  const instructionDensity = Number(features.instruction_density ?? 0);
+
+  const containsCode = Number(features.contains_code ?? 0);
+  const containsExamples = Number(features.contains_examples ?? 0);
+  const containsConstraints = Number(features.contains_constraints ?? 0);
+
+  let score = 0.15;
+  score += 0.2 * (containsExamples ? 1 : 0);
+  score += 0.2 * (containsConstraints ? 1 : 0);
+  score += 0.15 * (containsCode ? 1 : 0);
+
+  if (promptLength < 40) score -= 0.1;
+  else if (promptLength > 1200) score -= 0.05;
+  else score += 0.05;
+
+  score += 0.1 * clamp01(instructionDensity);
+  score += 0.1 * clamp01(complexityScore / 20);
+
+  return clamp01(Math.min(score, 0.95));
+}
+
+function withHeuristicFallback(response: BackendAnalysisResponse): BackendAnalysisResponse {
+  const hasMeaningfulPrediction =
+    (response.recommendations?.length ?? 0) > 0 ||
+    (Number.isFinite(response.baseline_score) && response.baseline_score > 0);
+
+  if (hasMeaningfulPrediction) return response;
+
+  const base = heuristicScore(response.extracted_features ?? {});
+  const recs: BackendAnalysisResponse["recommendations"] = [];
+
+  const containsCode = Number(response.extracted_features?.contains_code ?? 0);
+  const containsExamples = Number(response.extracted_features?.contains_examples ?? 0);
+  const containsConstraints = Number(response.extracted_features?.contains_constraints ?? 0);
+
+  if (!containsCode) {
+    const codeBlocks = Number(response.extracted_features?.code_blocks ?? 0);
+    const complexityScore = Number(response.extracted_features?.complexity_score ?? 0);
+    const projected = heuristicScore({
+      ...response.extracted_features,
+      contains_code: 1,
+      contains_code_True: 1,
+      contains_code_False: 0,
+      code_blocks: codeBlocks + 2,
+      complexity_score: complexityScore + 4,
+    });
+    if (projected > base) recs.push({ variant: "Add explicit code blocks", predicted_score: projected });
+  }
+
+  if (!containsExamples) {
+    const projected = heuristicScore({
+      ...response.extracted_features,
+      contains_examples: 1,
+      contains_examples_True: 1,
+      contains_examples_False: 0,
+    });
+    if (projected > base) recs.push({ variant: "Add context or examples", predicted_score: projected });
+  }
+
+  if (!containsConstraints) {
+    const projected = heuristicScore({
+      ...response.extracted_features,
+      contains_constraints: 1,
+      contains_constraints_True: 1,
+      contains_constraints_False: 0,
+    });
+    if (projected > base) recs.push({ variant: "Add explicit constraints", predicted_score: projected });
+  }
+
+  recs.sort((a, b) => b.predicted_score - a.predicted_score);
+
+  return {
+    ...response,
+    baseline_score: base,
+    recommendations: recs.slice(0, 3),
+  };
+}
+
 export default function AnalyzerPage() {
   const [result, setResult] = useState<BackendAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,7 +113,7 @@ export default function AnalyzerPage() {
 
     try {
       const response = await analyzePrompt<BackendAnalysisResponse>(promptText);
-      setResult(response);
+      setResult(withHeuristicFallback(response));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to analyze prompt.";
       setError(message);

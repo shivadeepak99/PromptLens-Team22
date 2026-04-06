@@ -1,4 +1,6 @@
-const BASE_URL = "https://promptlens-backend.onrender.com";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ??
+  "https://promptlens-backend.onrender.com";
 
 async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
