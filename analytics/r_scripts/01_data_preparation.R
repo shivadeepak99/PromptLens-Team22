@@ -1,7 +1,7 @@
 # ==============================================================================
 # Script 01: Data Preparation & ETL from Data Warehouse
 # ==============================================================================
-# Student: Shanigaram Shiva Deepak (2023BCD0048) / Team PromptLens
+# Project: PromptLens
 # Description: Connects to the Neon PostgreSQL database, extracts the 
 # necessary analytical columns via SQL, performs data cleaning, and 
 # saves an optimized R data object locally for downstream use.
@@ -23,7 +23,7 @@ library(tidyr)
 # --- SECTION 2: Database Connection ---
 print("--> Connecting to Neon Cloud Data Warehouse...")
 
-# Hardcoding read-only credentials for academic reproducibility
+# Database connection credentials
 con <- dbConnect(
   RPostgres::Postgres(),
   dbname = "neondb",

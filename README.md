@@ -1,126 +1,90 @@
-# Project Title: Prompt Intelligence Mining and Analytics Engine (PromptLens)
+# PromptLens
 
-## Team Members
-BALAGA LOKESH – 2023BCS0141  
-BARUKULA BRIJESH BENAAYAAH – 2022BCS0153  
-SHANIGARAM SHIVA DEEPAK – 2023BCD0048  
-BHUPALAM YASWANTH SAI – 2023BCD0057  
+**PromptLens** is an end-to-end prompt intelligence mining and analytics engine designed to transform unstructured LLM conversational logs into structured, actionable telemetry. 
 
-## Problem Statement
-The effectiveness of Large Language Models (LLMs) heavily relies on the structure, constraints, and vocabulary used in input prompts. Currently, developers lack data-driven methods to understand why certain prompts fail while others succeed. Without structured analysis, prompt engineering remains largely trial-and-error, leading to inefficient development cycles and wasted computational resources. 
+By employing robust ETL pipelines, a highly optimized OLAP data warehouse (PostgreSQL), and advanced data mining techniques, PromptLens brings data-driven engineering to prompt development. It allows engineering teams to stop relying on trial-and-error prompt engineering, instead utilizing multidimensional OLAP schemas to expose how constraint density, internal text features, and formatting correlate with prompt execution success across various language models.
 
-## Objectives
-* Collect real prompt execution logs from multiple real-world sources and community repositories.
-* Transform raw prompt logs into a highly structured data warehouse using a custom ETL pipeline mapping to a star schema.
-* Apply Data Mining techniques (Classification, Clustering, Association Rules) and OLAP operations to discover actionable patterns in prompt engineering.
-* Identify which AI models perform better and how specific internal text features (code inclusion, constraint counts) influence positive outcomes.
-* Build an analytics engine that exposes these insights effectively through a dedicated API and Dashboard.
+---
 
-## Dataset
-* **Source of the dataset:** Open-source AI prompt repositories (`chatbot_arena`, `prompt_library`, `sharegpt_code_interpreter`, `sharegpt_conversation_chronicles`).
-* **Number of observations:** $\approx$ 4.6 million execution events mapped into `fact_promptexecution`.
-* **Number of variables:** Over 15 feature-engineered attributes generated per prompt event, linked via dimension schema.
-* **Brief description of important attributes:** 
-  * `success_score`: Target metric indicating if the prompt generation was successful.
-  * `complexity_score`: Calculated density/complexity of the prompt instructions.
-  * `contains_code`, `contains_examples`, `contains_constraints`: Boolean structure flags.
-  * `prompt_length`, `token_estimate`: Quantitative measures of the textual volume.
-  * `language`, `model_name`: Categorical dimensions tracking tools and environment constraints. 
+## 🏗 System Architecture
 
-## Methodology
-- **Data preprocessing:** Raw dataset logic is parsed utilizing specialized dataset adapters to normalize overlapping formats. Features representing structure, tokens, and densities are programmatically extracted into standard `prompt_events.jsonl` formats. This parsed data is then bulk upserted into a robust PostgreSQL Data Warehouse optimized by Star Schema layouts (`fact_promptexecution`, `dim_prompt`, etc.). Clean vectors without high-null rates are queried back out into an RDS object using R.
-- **Exploratory analysis:** Executed utilizing R (`ggplot2`, `corrplot`, `dplyr`) to map feature covariance, analyze variance in success rates by targeted programming language constraints, and determine density comparisons against code feature flags.
-- **Models used:**
-  - *K-Means Clustering:* Applied upon continuous numeric constraints (complexity, length, estimated tokens) extracting distinct user behavior groupings defined around semantic complexity.
-  - *Association Rule Mining (Apriori):* Applied to textual categorical features discovering implicit linkages bridging complex features to success mapping. 
-  - *Logistic Regression:* Implemented acting as our baseline binomial classification mechanism projecting success probability via trained feature weights.
-- **Evaluation methods:** Validated through continuous predictions utilizing ROC/AUC curves and discrete cross-tabulated Confusion Matrices evaluating Accuracy, Precision, and Baseline statistical alignment.
+PromptLens is built as a highly scalable, multi-component data platform separated into distinct layers:
 
-## Results
-A complete data warehouse structure of 4.6 million event rows directly facilitates highly performant multidimensional OLAP analytic matrices. Exploring prompt dimensionality revealed explicit links dictating the predictability of failure rates across differing programmatic targets, while Apriori networks verified structured constraints universally amplify outcome predictability. The benchmark models demonstrated that explicit components mapped against model variants form heavily structured, non-random clustering distributions.
+- **ETL & Data Engineering (`/etl`)**: Parses, normalizes, and extracts over 15 feature-engineered attributes from ~4.6M raw execution events. Data is then streamed into a local or remote PostgreSQL instance utilizing a Star Schema layout.
+- **Analytics & Machine Learning (`/analytics`)**: Employs R-based and Python-based pipelines to run clustering (K-Means), association rule mining (Apriori), and baseline logistic regression to uncover hidden prompt outcome correlations.
+- **Serving Layer (`/api`)**: A robust FastAPI application that interfaces with the data warehouse, enabling real-time queries against OLAP indexes and materialized views.
+- **Frontend Dashboard (`/frontend`)**: A Next.js-based web interface designed to visualize prompt engineering telemetry and model performance patterns dynamically.
 
-## Key Visualizations
-*(Generated automatically by R scripts inside `results/figures/`)*
+*For deeper architectural insights, please refer to [ARCHITECTURE.md](ARCHITECTURE.md) and [DATA_PIPELINE.md](DATA_PIPELINE.md).*
 
-### Feature Correlation Matrix
-![Correlation Matrix](results/figures/correlation_matrix.png)
+---
 
-### Model Success Density
-![Success Density](results/figures/success_density.png)
+## ✨ Core Features
 
-### Average Success Rate by Coding Language
-![Language Difficulty](results/figures/language_difficulty.png)
+* **Large-Scale Prompt Telemetry**: Ingests, normalizes, and processes ~4.6M prompt execution events from diverse real-world AI repositories (e.g., ShareGPT, Chatbot Arena).
+* **Star Schema Warehouse Design**: Maps event tracking data into `fact_promptexecution` and dimensional tables, heavily optimized via indices and materialized views.
+* **Feature Engineering Engine**: Extracts boolean structure flags (`contains_code`, `contains_constraints`) and quantitative metrics (`complexity_score`, `token_estimate`) programmatically.
+* **OLAP Analytics & ML Insights**: Discovers structural patterns that dictate prompt success or failure using Classification, Clustering, and Association Rules.
+* **API & Dashboard Interface**: Presents data securely and efficiently to end users via a FastAPI layer integrated with a Next.js front-end.
 
-### K-Means Clustering Space
-![Cluster Plot](results/figures/cluster_plot.png)
+---
 
-### Association Rules Representation
-![Association Rules](results/figures/association_rules.png)
+## 🚀 Quick Start
 
-### Classification Evaluation
-![ROC Curve](results/figures/roc_curve.png)
+PromptLens is designed for containerized cloud deployment but can be reproduced locally.
 
-## How to Run the Project
-This project is already fully deployed (PostgreSQL warehouse on Neon.tech and FastAPI backend running in a Docker container on a cloud host), so running it locally is **optional**. 
+### 1. Environment Setup
 
-If you want to reproduce the full pipeline locally, follow the service-by-service steps below.
+Copy the example environment file and configure it:
+```bash
+cp .env.example .env
+```
 
-### 1. ETL / Data Warehouse Service
-1. Ensure you have PostgreSQL available (or configure access to the Neon instance).
-2. Create the `promptlens` database using the SQL schema files in `warehouse/`.
-3. Run the Python loader to stream JSONL into the warehouse:
-  * `python warehouse/load_streaming.py`
-4. (Optional) Re-run the R data extraction to confirm analytical views:
-  * `Rscript scripts/01_data_preparation.R`
+### 2. ETL & Warehouse Ingestion
+Ensure PostgreSQL is running and accessible. Run the following to build the schemas and load data:
+```bash
+python etl/warehouse/load_streaming.py
+```
 
-### 2. R Analytics Service
-1. Install necessary R packages via the provided script:
-  * `Rscript scripts/requirements.R`
-2. Execute the analytical pipeline sequentially to generate figures and evaluation tables:
-  * `Rscript scripts/01_data_preparation.R`
-  * `Rscript scripts/02_exploratory_analysis.R`
-  * `Rscript scripts/03_modeling.R`
-  * `Rscript scripts/04_evaluation.R`
+### 3. API Serving
+Start the FastAPI backend server:
+```bash
+cd api
+pip install -r ../requirements.txt
+uvicorn main:app --reload
+```
+The API docs are available at `http://localhost:8000/docs`.
 
-### 3. Backend API Service (FastAPI)
-1. Install necessary Python backend dependencies:
-  * `pip install -r requirements.txt`
-2. Configure the `DATABASE_URL` environment variable to point to your warehouse (local PostgreSQL or Neon).
-3. Start the API locally:
-  * `uvicorn app.main:app --reload`
-4. The interactive API docs will be available at `http://localhost:8000/docs`.
+### 4. ML / Analytics (Optional)
+To run the R-based or Python-based analytical models locally:
+```bash
+cd analytics/r_scripts
+Rscript requirements.R
+Rscript 01_data_preparation.R
+# Followed by remaining scripts...
+```
 
-### 4. Frontend Dashboard (Planned)
-The dashboard/frontend layer will connect to the FastAPI analytics endpoints to visualize OLAP and model insights. Frontend start-up instructions will be added once the UI is finalized.
+---
 
-**Folder organization (summary):**
-* `scripts/`: Central R logic scripts sequentially numbering data preparation -> modeling -> evaluation loops. Also includes package requirement lists.
-* `results/figures/`: Repository holding graphical PNG visualizations automatically constructed via R.
-* `results/tables/`: Serialized mathematical metrics capturing cross-validation scores.
-* `app/` & `ml_service/`: Python ML pipeline inferences and web API framework endpoints.
-* `warehouse/`: Physical load and setup schemas targeting local/remote PostgreSQL data warehousing components.
+## 📖 Documentation Directory
 
-## R Libraries Used
-The following R libraries are used throughout the analysis pipeline (installed via `scripts/requirements.R`):
+- **[Architecture & Systems Design](ARCHITECTURE.md)**: Deep dive into the PromptLens component layers.
+- **[Data Pipeline & ETL](DATA_PIPELINE.md)**: Details regarding ingestion, transformation logic, and warehouse schema.
+- **[API Reference](API_REFERENCE.md)**: Documentation covering the FastAPI layer and endpoints.
+- **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing code and expanding PromptLens.
+- **[Changelog](CHANGELOG.md)**: History of features, fixes, and performance updates.
 
-* `DBI`, `RPostgres` – Database connectivity to the Neon/PostgreSQL warehouse.
-* `dplyr`, `tidyr` – Data manipulation, filtering, and reshaping.
-* `ggplot2`, `corrplot` – Exploratory data analysis and plotting.
-* `arules`, `arulesViz` – Association rule mining and rule visualization.
-* `cluster`, `factoextra` – K-Means clustering and cluster visualization.
-* `caret` – Train/test splitting and classification utilities.
-* `pROC` – ROC curve and AUC computation for model evaluation.
+---
 
-## Conclusion
-The project has successfully bridged the gap isolating massive unstructured dialogue datasets into highly disciplined OLAP architectures. Empowered by Exploratory Analysis and Data Mining schemas (K-Means, Apriori, Modeling matrices), PromptLens quantitatively proves that conversational AI failures are heavily structured phenomena dependent entirely upon instruction density, structural composition, and dataset environment dimensionality.
+## 📈 Visual Telemetry
 
-## Contribution
-* **BALAGA LOKESH (2023BCS0141) |** Data Mining / ML Engineer: Classification model, clustering analysis, association rule mining, exporting model results.
-* **BARUKULA BRIJESH BENAAYAAH (2022BCS0153) |** Documentation & Dashboard Developer: Analytical SQL queries, materialized views, dashboard visualizations, frontend integration.
-* **SHANIGARAM SHIVA DEEPAK (2023BCD0048) |** ETL Pipeline Engineer, Database Designer & AI Agent Developer: Dataset ingestion, transformation pipeline, feature extraction, star schema design, PostgreSQL database setup, loader implementation, warehouse validation.
-* **BHUPALAM YASWANTH SAI (2023BCD0057) |** FastAPI Backend Architect: API development, analytics endpoints, integration with database, API security and validation.
+The analytics engine continually updates insights. Key automatically generated telemetry visualizations (accessible via the dashboard or `analytics/results/figures/`):
+- Feature Correlation Matrices
+- Model Success Density Comparisons
+- K-Means Clustering of Semantic Complexity
+- Classification Evaluation (ROC/AUC)
 
-## References
-1. Zheng, L. et al. (2023). "Judging LLM-as-a-Judge with Chatbot Arena". HuggingFace Open Repositories. ShareGPT Code Frameworks. 
-2. Comprehensive R-Project analytical systems (`ggplot2` Wickham, H., `arules` Hahsler, M., `caret` Kuhn, M.).
-3. PostgreSQL Data Warehouse OLAP Architectural Documentations.
+---
+
+## 📄 License & Legal
+[MIT License](LICENSE) (If applicable). Built as a professional-grade prompt intelligence platform.

@@ -1,10 +1,9 @@
 # ==============================================================================
 # Script 02: Exploratory Data Analysis & Visualization
 # ==============================================================================
-# Student: Bhupalam Yaswanth Sai (2023BCD0057) / Team PromptLens
+# Project: PromptLens
 # Description: Performs exploratory data analysis to summarize the numeric and 
-# categorical dimensions within the PromptLens data warehouse. Meets the rubric 
-# requirement for exploratory analysis and visualization generation.
+# categorical dimensions within the PromptLens data warehouse.
 # ==============================================================================
 
 # --- SECTION 1: Setup and Data Loading ---

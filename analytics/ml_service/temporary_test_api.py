@@ -1,7 +1,7 @@
 """
 Temporary Test API (FastAPI)
-Local API for testing ML models before production API is built by teammates
-Replace this entirely with their production API implementation
+Local API for testing ML models before production API is built
+Replace this entirely with the production API implementation
 """
 
 import os
@@ -368,7 +368,7 @@ if __name__ == "__main__":
     print(f"📚 Docs:   http://localhost:8000/docs")
     print(f"🔄 ReDoc:  http://localhost:8000/redoc")
     print(f"\n⚠️  IMPORTANT: This is a TEMPORARY test API.")
-    print(f"   Your teammates will build the production API.")
+    print(f"   This will be replaced by the production API.")
     print(f"   Use this to test ML models locally.\n")
     
     uvicorn.run(

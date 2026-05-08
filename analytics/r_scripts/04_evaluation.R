@@ -1,7 +1,7 @@
 # ==============================================================================
 # Script 04: Model Evaluation
 # ==============================================================================
-# Student: Balaga Lokesh (2023BCS0141) / Team PromptLens
+# Project: PromptLens
 # Description: Evaluates the Logistic Regression baseline model generating 
 # performance metrics (Confusion Matrix) and visual analysis (ROC curves).
 # Evaluates predictive strength upon out-of-sample data.

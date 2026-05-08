@@ -1,9 +1,9 @@
 # ==============================================================================
 # Script 03: Machine Learning & Modeling
 # ==============================================================================
-# Student: Balaga Lokesh (2023BCS0141) / Team PromptLens
+# Project: PromptLens
 # Description: Implements Association Rule Mining (Apriori), K-Means Clustering, 
-# and a Logistic Regression Model (Baseline) to satisfy the modeling tier rubric.
+# and a Logistic Regression Model (Baseline).
 # ==============================================================================
 
 # --- SECTION 1: Setup and Data Loading ---
@@ -26,7 +26,7 @@ df <- readRDS("data/processed_data.rds")
 dir.create("results/figures", recursive = TRUE, showWarnings = FALSE)
 dir.create("app/models", recursive = TRUE, showWarnings = FALSE)
 
-# Set global random seed across file execution for academic grading reproducibility
+# Set global random seed across file execution for reproducibility
 set.seed(42)
 
 # --- SECTION 2: K-Means Clustering ---
